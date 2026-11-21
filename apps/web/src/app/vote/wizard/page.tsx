@@ -1,0 +1,501 @@
+"use client";
+
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  ShieldCheck, ArrowRight, ArrowLeft, Loader2, AlertCircle, CheckCircle2, Fingerprint,
+  Lock, UserCheck, Vote, FileCheck, Sparkles, X, Check, UserCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { activeElections, positions as ALL_POSITIONS, candidates as ALL_CANDIDATES } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
+
+type Stage = "intro" | "verify" | "vote" | "review" | "submitting";
+type Question = { type: string; text: string };
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+
+function WizardContent() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const electionId = params.get("electionId") ?? "soateco-2026";
+  const election = activeElections.find((e) => e.id === electionId) ?? activeElections[0];
+  const electionPositions = ALL_POSITIONS.filter((p) => p.electionId === election.id);
+
+  const [stage, setStage]               = useState<Stage>("intro");
+  const [admissionNumber, setAdmissionNumber] = useState("");
+  const [firstName, setFirstName]       = useState("");
+  const [question, setQuestion]         = useState<Question | null>(null);
+  const [answer, setAnswer]             = useState("");
+  const [selections, setSelections]     = useState<Record<string, string>>({});
+  const [currentPosIdx, setCurrentPosIdx] = useState(0);
+  const [error, setError]               = useState<string | null>(null);
+  const [loading, setLoading]           = useState(false);
+  const [showConfirm, setShowConfirm]   = useState(false);
+
+  // ── Step 1: lookup ──
+  async function handleLookup(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("dev") === "1") {
+      setFirstName("Test Student");
+      setQuestion({ type: "yearOfBirth", text: "What is your year of birth?" });
+      setStage("verify");
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/api/auth/lookup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admissionNumber: admissionNumber.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.found) throw new Error("No ATC student found with that admission number!");
+      setFirstName(data.firstName);
+      setQuestion(data.question);
+      setStage("verify");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Lookup failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Step 2: verify ──
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("dev") === "1") {
+      localStorage.setItem("atc_token", "dev-token");
+      localStorage.setItem("atc_user", JSON.stringify({ id: "dev", role: "STUDENT" }));
+      setStage("vote");
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/api/auth/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          admissionNumber: admissionNumber.trim(),
+          answer: answer.trim(),
+          type: question?.type,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error("Identity verification failed. Please check your information.");
+
+      localStorage.setItem("atc_token", data.accessToken);
+      localStorage.setItem("atc_user", JSON.stringify(data.user));
+
+      // Check if already voted
+      const statusRes = await fetch(`${API}/api/ballots/status/${electionId}`, {
+        headers: { Authorization: `Bearer ${data.accessToken}` },
+      });
+      if (statusRes.ok) {
+        const s = await statusRes.json();
+        if (s.hasVoted) {
+          router.push(`/vote/waiting?electionId=${electionId}`);
+          return;
+        }
+      }
+
+      setStage("vote");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Step 3: select ──
+  function select(posId: string, candId: string) {
+    setSelections((p) => ({ ...p, [posId]: candId }));
+  }
+
+  function nextPosition() {
+    if (currentPosIdx < electionPositions.length - 1) {
+      setCurrentPosIdx(currentPosIdx + 1);
+    } else {
+      setStage("review");
+    }
+  }
+
+  function prevPosition() {
+    if (currentPosIdx > 0) setCurrentPosIdx(currentPosIdx - 1);
+    else setStage("vote");
+  }
+
+  // ── Step 4: submit ──
+  async function doSubmit() {
+    setShowConfirm(false);
+
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("dev") === "1") {
+      setStage("submitting");
+      setTimeout(() => {
+        router.push(`/vote/waiting?electionId=${election.id}&ref=DEV-${Date.now()}`);
+      }, 1500);
+      return;
+    }
+    setStage("submitting");
+    setError(null);
+    try {
+      const token = localStorage.getItem("atc_token");
+      const res = await fetch(`${API}/api/ballots/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          electionId: election.id,
+          selections: Object.entries(selections).map(([positionId, candidateId]) => ({ positionId, candidateId })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Submission failed");
+      router.push(`/vote/waiting?electionId=${election.id}&ref=${encodeURIComponent(data.receiptId)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Submission failed");
+      setStage("review");
+    }
+  }
+
+  const completed = Object.keys(selections).length;
+  const total = electionPositions.length;
+
+  // ──────────────────────────────
+  // RENDER
+  // ──────────────────────────────
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[#1e40af]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,119,33,0.18),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(22,163,106,0.12),transparent_50%)]" />
+      {/* Nav */}
+      <header className="relative z-10 border-b border-white/10 bg-[#1e40af]/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#F47721] text-white text-xs font-black">ATC</div>
+            <div>
+              <p className="text-sm font-extrabold text-white">ATC DIGITAL DEMOCRACY</p>
+              <p className="text-[10px] uppercase tracking-widest text-blue-200/70">Online Voting System</p>
+            </div>
+          </Link>
+          <Link href="/" className="text-sm text-blue-100 hover:text-white transition">Cancel</Link>
+        </div>
+      </header>
+
+      <main className="relative z-10 mx-auto max-w-3xl px-4 py-8 sm:py-12">
+        {/* Progress */}
+        <div className="mb-8 flex items-center gap-2">
+          {[
+            { n: 1, l: "Admission",  icon: ShieldCheck },
+            { n: 2, l: "Verify",     icon: UserCheck },
+            { n: 3, l: "Vote",       icon: Vote },
+            { n: 4, l: "Submit",     icon: FileCheck },
+          ].map((s, i) => {
+            const done =
+              (stage === "verify" && s.n === 1) ||
+              (stage === "vote" && s.n <= 2) ||
+              (["review", "submitting"].includes(stage) && s.n <= 3);
+            const active =
+              (stage === "intro" && s.n === 1) ||
+              (stage === "verify" && s.n === 2) ||
+              (stage === "vote" && s.n === 3) ||
+              (["review", "submitting"].includes(stage) && s.n === 4);
+            const Icon = s.icon;
+            return (
+              <div key={s.n} className="flex flex-1 items-center gap-1.5">
+                <div className={cn(
+                  "grid h-8 w-8 shrink-0 place-items-center rounded-full ring-2 text-xs font-bold transition",
+                  done ? "bg-[#16A36A] text-white ring-[#16A36A]/40" :
+                  active ? "bg-[#F47721] text-white ring-[#F47721]/40" :
+                  "bg-white/5 text-blue-300/60 ring-white/10"
+                )}>
+                  {done ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+                </div>
+                <span className={cn(
+                  "hidden text-[11px] font-semibold sm:block",
+                  (done || active) ? "text-white" : "text-blue-300/50"
+                )}>{s.l}</span>
+                {i < 3 && <div className={cn("h-px flex-1", done ? "bg-[#16A36A]/70" : "bg-white/10")} />}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Card */}
+        <div className="rounded-3xl bg-white p-8 shadow-2xl ring-1 ring-white/20 sm:p-10">
+          {/* Intro */}
+          {stage === "intro" && (
+            <>
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#F47721] to-orange-600 text-white shadow-lg shadow-orange-300/50">
+                  <Fingerprint className="h-8 w-8" />
+                </div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#F47721]">ATC Online Voting System</p>
+                <h1 className="mt-2 text-2xl font-black text-[#0a1628] sm:text-3xl">Enter your admission number</h1>
+                <p className="mt-3 text-sm text-slate-600">
+                  We collect and process your information to verify your eligibility and improve the efficiency, security, and integrity of our election process.
+                </p>
+              </div>
+
+              <form onSubmit={handleLookup} className="space-y-4">
+                <div>
+                  <Label htmlFor="admission" className="text-xs font-bold uppercase tracking-wider text-[#0a1628]">
+                    Enter your ATC admission number
+                  </Label>
+                  <Input
+                    id="admission"
+                    placeholder="e.g. 26041012003"
+                    value={admissionNumber}
+                    onChange={(e) => setAdmissionNumber(e.target.value)}
+                    className="mt-2 h-12 text-base"
+                    required
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <Button type="submit" variant="orange" size="lg" className="w-full" disabled={loading || !admissionNumber.trim()}>
+                  {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Checking...</> : <>Continue <ArrowRight className="h-4 w-4" /></>}
+                </Button>
+              </form>
+            </>
+          )}
+
+          {/* Verify */}
+          {stage === "verify" && question && (
+            <>
+              <div className="mb-6">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#F47721]">Step 2 · Identity Verification</p>
+                <h1 className="mt-2 text-2xl font-black text-[#0a1628]">Hi, {firstName}. Verify your identity.</h1>
+                <p className="mt-2 text-sm text-slate-600">
+                  To confirm that you are the rightful owner of this admission number, please answer the following question.
+                </p>
+              </div>
+
+              <div className="mb-5 rounded-2xl bg-[#F47721]/5 p-4 ring-1 ring-[#F47721]/20">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#F47721]">Question</p>
+                <p className="mt-1 text-base font-bold text-[#0a1628]">{question.text.toUpperCase()}</p>
+              </div>
+
+              <form onSubmit={handleVerify} className="space-y-4">
+                <div>
+                  <Label htmlFor="answer" className="text-xs font-bold uppercase tracking-wider text-[#0a1628]">
+                    Your answer
+                  </Label>
+                  <Input
+                    id="answer"
+                    placeholder="Enter your answer"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    className="mt-2 h-12 text-base"
+                    required
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={() => setStage("intro")} disabled={loading}>
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </Button>
+                  <Button type="submit" variant="orange" size="lg" className="flex-1" disabled={loading || !answer.trim()}>
+                    {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Verifying...</> : <>Verify &amp; continue <ArrowRight className="h-4 w-4" /></>}
+                  </Button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {/* Vote */}
+          {stage === "vote" && (
+            <>
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold uppercase tracking-widest text-[#F47721]">
+                    Position {currentPosIdx + 1} of {total}
+                  </span>
+                  <span className="text-slate-500">{completed} / {total} selected</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-[#F47721] transition-all"
+                    style={{ width: `${(completed / total) * 100}%` }} />
+                </div>
+              </div>
+
+              <h1 className="text-xl font-black text-[#0a1628]">
+                {electionPositions[currentPosIdx].title}
+              </h1>
+              <p className="mt-1 text-sm text-slate-600">{electionPositions[currentPosIdx].description}</p>
+              <p className="mt-1 text-xs text-slate-500">Select one candidate</p>
+
+              <div className="mt-5 space-y-3">
+                {ALL_CANDIDATES.filter((c) => c.positionId === electionPositions[currentPosIdx].id).map((c) => {
+                  const sel = selections[electionPositions[currentPosIdx].id] === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => select(electionPositions[currentPosIdx].id, c.id)}
+                      className={cn(
+                        "group w-full rounded-2xl border-2 p-6 text-left transition-all duration-300",
+                        sel ? "border-[#F47721] bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 shadow-2xl shadow-orange-300/50 scale-[1.02]" : "border-slate-200 bg-white hover:border-[#F47721]/40 hover:shadow-xl hover:shadow-orange-100/50"
+                      )}
+                    >
+                      <div className="flex items-start gap-6">
+                        <div className="relative shrink-0">
+                          <div className={cn("grid h-28 w-28 place-items-center rounded-2xl bg-gradient-to-br text-white text-2xl font-black ring-4 ring-white shadow-xl transition-transform duration-300 group-hover:scale-105", c.color)}>
+                            {c.initials}
+                          </div>
+                          <div className="absolute -bottom-2 -right-2 grid h-9 w-9 place-items-center rounded-full bg-[#F47721] text-white shadow-lg ring-2 ring-white">
+                            <UserCircle className="h-5 w-5" />
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-xl font-black text-[#0a1628] tracking-tight">{c.name}</p>
+                              <p className="mt-1 text-sm font-medium text-slate-500">{c.programme} · {c.ntaLevel}</p>
+                            </div>
+                            <div className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 transition-all",
+                              sel ? "border-[#F47721] bg-[#F47721] text-white scale-110" : "border-slate-300")}>
+                              {sel && <Check className="h-4 w-4" />}
+                            </div>
+                          </div>
+                          <p className="mt-3 text-base leading-relaxed text-slate-700 line-clamp-4">{c.manifesto}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 flex gap-2">
+                <Button variant="outline" onClick={prevPosition} disabled={currentPosIdx === 0}>
+                  <ArrowLeft className="h-4 w-4" /> Back
+                </Button>
+                <Button variant="orange" className="flex-1"
+                  disabled={!selections[electionPositions[currentPosIdx].id]}
+                  onClick={nextPosition}>
+                  {currentPosIdx < total - 1 ? "Next position" : "Review ballot"} <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Review */}
+          {stage === "review" && (
+            <>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#F47721]">Review your ballot</p>
+              <h1 className="mt-2 text-2xl font-black text-[#0a1628]">Confirm your selections</h1>
+
+              <div className="mt-5 space-y-3">
+                {electionPositions.map((p) => {
+                  const cand = ALL_CANDIDATES.find((c) => c.id === selections[p.id]);
+                  return (
+                    <div key={p.id} className="rounded-xl border border-slate-200 p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{p.title}</p>
+                      {cand ? (
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className={cn("grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br text-white text-xs font-bold", cand.color)}>
+                            {cand.initials}
+                          </div>
+                          <p className="font-bold text-[#0a1628]">{cand.name}</p>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-sm text-danger">No selection</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {error && (
+                <div className="mt-4 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{error}</span>
+                </div>
+              )}
+
+              <div className="mt-6 flex gap-2">
+                <Button variant="outline" onClick={() => setStage("vote")}>
+                  <ArrowLeft className="h-4 w-4" /> Edit selections
+                </Button>
+                <Button variant="orange" size="lg" className="flex-1"
+                  disabled={completed < total}
+                  onClick={() => setShowConfirm(true)}>
+                  <Lock className="h-4 w-4" /> Submit my vote
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Submitting */}
+          {stage === "submitting" && (
+            <div className="py-16 text-center">
+              <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#F47721]" />
+              <h2 className="mt-6 text-xl font-black text-[#0a1628]">Sealing your ballot...</h2>
+              <p className="mt-2 text-sm text-slate-600">Please wait. Do not close this page.</p>
+            </div>
+          )}
+        </div>
+
+        <p className="mt-6 text-center text-xs text-blue-200/60">
+          🔒 Secure · Anonymous · Auditable · Protected by ATC Digital Democracy
+        </p>
+      </main>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#F47721]/10">
+              <Lock className="h-8 w-8 text-[#F47721]" />
+            </div>
+            <h2 className="mt-5 text-center text-xl font-black text-[#0a1628]">
+              Are you sure you want to vote for the chosen candidates?
+            </h2>
+            <p className="mt-3 text-center text-sm font-semibold text-danger">
+              This action cannot be undone or edited later!
+            </p>
+
+            <div className="mt-6 flex flex-col gap-2">
+              <Button variant="outline" onClick={() => setShowConfirm(false)}>
+                <ArrowLeft className="h-4 w-4" /> Go back &amp; review
+              </Button>
+              <Button variant="orange" onClick={doSubmit}>
+                <CheckCircle2 className="h-4 w-4" /> Yes, submit my vote
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function VoteWizardPage() {
+  return (
+    <Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#1e40af]"><Loader2 className="h-6 w-6 animate-spin text-white" /></div>}>
+      <WizardContent />
+    </Suspense>
+  );
+}

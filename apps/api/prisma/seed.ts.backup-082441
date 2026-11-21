@@ -1,0 +1,193 @@
+import { PrismaClient, RoleName, ElectionCategory, ElectionStatus, StudentStatus, DataSourceType } from "@prisma/client";
+import * as bcrypt from "bcrypt";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log("🌱 Seeding database...");
+
+  // 1. Roles
+  const roles = await Promise.all(
+    Object.values(RoleName).map((name) =>
+      prisma.role.upsert({
+        where: { name },
+        update: {},
+        create: { name, description: `${name} role` },
+      })
+    )
+  );
+  const roleByName = Object.fromEntries(roles.map((r) => [r.name, r]));
+  console.log(`✅ Roles: ${roles.length}`);
+
+  // 2. Academic Year
+  const year = await prisma.academicYear.upsert({
+    where: { name: "2025/2026" },
+    update: {},
+    create: {
+      name: "2025/2026",
+      startsAt: new Date("2025-09-01"),
+      endsAt: new Date("2026-08-31"),
+      isActive: true,
+    },
+  });
+
+  // 3. Programme + Class
+  const programme = await prisma.academicProgramme.upsert({
+    where: { code: "NTA-ICT" },
+    update: {},
+    create: { code: "NTA-ICT", name: "ICT", department: "Computing" },
+  });
+  const cls = await prisma.academicClass.upsert({
+    where: {
+      programmeId_academicYearId_ntaLevel_name: {
+        programmeId: programme.id,
+        academicYearId: year.id,
+        ntaLevel: 5,
+        name: "ICT NTA 5A",
+      },
+    },
+    update: {},
+    create: {
+      name: "ICT NTA 5A",
+      ntaLevel: 5,
+      programmeId: programme.id,
+      academicYearId: year.id,
+    },
+  });
+
+  // 4. Demo Users (students)
+  const demo = [
+    { adm: "ATC/2024/0001", dob: 2003, first: "Amina", last: "Hassan", role: RoleName.STUDENT },
+    { adm: "ATC/2024/0002", dob: 2002, first: "Baraka", last: "Mwenda", role: RoleName.CANDIDATE },
+    { adm: "ATC/2024/0003", dob: 1990, first: "Daudi", last: "Mushi", role: RoleName.SYSTEM_ADMIN },
+    { adm: "ATC/2024/0004", dob: 1985, first: "Fatuma", last: "Salum", role: RoleName.ELECTORAL_COMMISSION },
+    { adm: "ATC/2024/0005", dob: 1988, first: "Joseph", last: "Mkapa", role: RoleName.ELECTION_OFFICER },
+  ];
+
+  const createdStudents: any[] = [];
+
+  for (const d of demo) {
+    const student = await prisma.student.upsert({
+      where: { admissionNumber: d.adm },
+      update: {},
+      create: {
+        admissionNumber: d.adm,
+        firstName: d.first,
+        lastName: d.last,
+        dateOfBirth: new Date(`${d.dob}-01-01`),
+        gender: "N/A",
+        programmeId: programme.id,
+        classId: cls.id,
+        ntaLevel: 5,
+        academicYearId: year.id,
+        status: StudentStatus.ACTIVE,
+        sourceType: DataSourceType.FILE_IMPORT,
+      },
+    });
+
+    await prisma.verificationAnswer.upsert({
+      where: { id: `${student.id}-dob` },
+      update: {},
+      create: {
+        id: `${student.id}-dob`,
+        studentId: student.id,
+        question: "yearOfBirth",
+        answerHash: await bcrypt.hash(String(d.dob), 10),
+      },
+    });
+
+    const user = await prisma.user.upsert({
+      where: { email: `${d.adm.replace(/\//g, "-").toLowerCase()}@atc.ac.tz` },
+      update: {},
+      create: {
+        email: `${d.adm.replace(/\//g, "-").toLowerCase()}@atc.ac.tz`,
+        fullName: `${d.first} ${d.last}`,
+        passwordHash: await bcrypt.hash("password", 10),
+        isActive: true,
+      },
+    });
+
+    await prisma.userRole.upsert({
+      where: { userId_roleId: { userId: user.id, roleId: roleByName[d.role].id } },
+      update: {},
+      create: { userId: user.id, roleId: roleByName[d.role].id },
+    });
+
+    createdStudents.push({ ...student, user });
+  }
+  console.log(`✅ Students + Users: ${createdStudents.length}`);
+
+  // 5. Election
+  const election = await prisma.election.upsert({
+    where: { id: "soateco-2026" },
+    update: { status: ElectionStatus.VOTING_OPEN },
+    create: {
+      id: "soateco-2026",
+      title: "SOATECO General Election 2026",
+      category: ElectionCategory.GENERAL,
+      academicYearId: year.id,
+      description: "SOATECO Students Organization of Arusha Technical College",
+      status: ElectionStatus.VOTING_OPEN,
+      votingStartsAt: new Date(Date.now() - 3600_000),
+      votingEndsAt: new Date(Date.now() + 7 * 86400_000),
+    },
+  });
+  console.log(`✅ Election: ${election.title}`);
+
+  // 6. Positions
+  const posPres = await prisma.electionPosition.create({
+    data: { electionId: election.id, title: "President", order: 1, numberOfWinners: 1, maxSelections: 1, description: "Head of SOATECO" },
+  }).catch(() => prisma.electionPosition.findFirst({ where: { electionId: election.id, title: "President" } }));
+
+  const posSec = await prisma.electionPosition.create({
+    data: { electionId: election.id, title: "Secretary", order: 2, numberOfWinners: 1, maxSelections: 1, description: "General Secretary" },
+  }).catch(() => prisma.electionPosition.findFirst({ where: { electionId: election.id, title: "Secretary" } }));
+
+  // 7. Candidates
+  const c1 = createdStudents[0];
+  const c2 = createdStudents[1];
+
+  const candData = [
+    { pos: posPres, student: c1, name: "Amina Hassan", order: 1 },
+    { pos: posPres, student: c2, name: "Baraka Mwenda", order: 2 },
+    { pos: posSec, student: c1, name: "Amina Hassan", order: 1 },
+    { pos: posSec, student: c2, name: "Baraka Mwenda", order: 2 },
+  ];
+
+  for (const c of candData) {
+    await prisma.candidate.create({
+      data: {
+        electionId: election.id,
+        positionId: c.pos!.id,
+        studentId: c.student.id,
+        displayName: c.name,
+        manifesto: `I am ${c.name}, ready to serve.`,
+        ballotOrder: c.order,
+        isApproved: true,
+      },
+    }).catch(() => null);
+  }
+  console.log(`✅ Candidates: ${candData.length}`);
+
+  // 8. Voter Register
+  for (const s of createdStudents) {
+    await prisma.voterRegisterEntry.upsert({
+      where: { electionId_studentId: { electionId: election.id, studentId: s.id } },
+      update: {},
+      create: { electionId: election.id, studentId: s.id, isEligible: true, frozenAt: new Date() },
+    });
+  }
+  console.log(`✅ Voter Register: ${createdStudents.length}`);
+
+  console.log("\n🎉 DONE!\n");
+  console.log("Test credentials:");
+  console.log("  ATC/2024/0001 + 2003 → STUDENT (Amina)");
+  console.log("  ATC/2024/0002 + 2002 → CANDIDATE (Baraka)");
+  console.log("  ATC/2024/0003 + 1990 → ADMIN (Daudi)");
+  console.log("  ATC/2024/0004 + 1985 → COMMISSION (Fatuma)");
+  console.log("  ATC/2024/0005 + 1988 → OFFICER (Joseph)");
+}
+
+main()
+  .catch((e) => { console.error(e); process.exit(1); })
+  .finally(() => prisma.$disconnect());

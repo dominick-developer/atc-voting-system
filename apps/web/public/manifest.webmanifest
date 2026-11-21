@@ -1,0 +1,10 @@
+{
+  "name": "ATC Online Voting System",
+  "short_name": "ATC Voting",
+  "description": "Secure student elections for Arusha Technical College",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F7FA",
+  "theme_color": "#10243A",
+  "orientation": "portrait"
+}

@@ -1,0 +1,82 @@
+// ─────────────────────────────────────────────────────────────
+// ATC ONLINE VOTING SYSTEM - ISOLATED VOTING DB SCHEMA
+// Domains: voter credentials, anonymous ballots, tally
+//
+// ⚠️  PRIVACY BOUNDARY:
+//     - No direct relation from VoterCredential to Ballot.
+//     - Ballot stores NO voter identity.
+//     - Credential consumption is atomic, separate from ballot content.
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_VOTING")
+}
+
+model VoterCredential {
+  id             String    @id @default(uuid())
+  electionId     String
+  studentIdHash  String    // hashed student id — NOT reversible in this DB alone
+  credentialHash String    @unique
+  isConsumed     Boolean   @default(false)
+  consumedAt     DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+
+  @@index([electionId, isConsumed])
+  @@index([studentIdHash, electionId])
+  @@map("voter_credentials")
+}
+
+model Ballot {
+  id          String   @id @default(uuid())
+  electionId  String
+  receiptRef  String   @unique  // NON-IDENTIFYING, does not encode selections
+  submittedAt DateTime @default(now())
+
+  selections  BallotSelection[]
+
+  @@index([electionId])
+  @@map("ballots")
+}
+
+model BallotSelection {
+  id         String @id @default(uuid())
+  ballotId   String
+  positionId String
+  candidateId String
+  ballot     Ballot @relation(fields: [ballotId], references: [id], onDelete: Cascade)
+
+  @@index([ballotId])
+  @@index([positionId, candidateId])
+  @@map("ballot_selections")
+}
+
+model TallyRecord {
+  id         String   @id @default(uuid())
+  electionId String
+  positionId String
+  candidateId String
+  voteCount  Int      @default(0)
+  computedAt DateTime @default(now())
+
+  @@unique([electionId, positionId, candidateId])
+  @@map("tally_records")
+}
+
+model ElectionResultSnapshot {
+  id          String   @id @default(uuid())
+  electionId  String   @unique
+  payload     Json     // final tally + reconciliation
+  isVerified  Boolean  @default(false)
+  verifiedAt  DateTime?
+  declaredAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@map("election_result_snapshots")
+}

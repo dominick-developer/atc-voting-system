@@ -1,0 +1,26 @@
+import { Sidebar, NavItem } from "./sidebar";
+import { Topbar } from "./topbar";
+
+interface DashboardShellProps {
+  nav: NavItem[];
+  subtitle: string;
+  roleLabel: string;
+  title: string;
+  topbarSubtitle?: string;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+export function DashboardShell({
+  nav, subtitle, roleLabel, title, topbarSubtitle, actions, children,
+}: DashboardShellProps) {
+  return (
+    <div className="min-h-screen bg-canvas">
+      <Sidebar items={nav} subtitle={subtitle} roleLabel={roleLabel} />
+      <div className="lg:pl-[270px]">
+        <Topbar title={title} subtitle={topbarSubtitle} actions={actions} />
+        <main className="p-4 sm:p-6">{children}</main>
+      </div>
+    </div>
+  );
+}

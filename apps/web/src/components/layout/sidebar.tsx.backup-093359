@@ -1,0 +1,100 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
+
+export type NavItem = {
+  label: string;
+  href: string;
+  icon: string; // emoji
+};
+
+export const STUDENT_NAV: NavItem[] = [
+  { label: "Dashboard",     href: "/dashboard",     icon: "🏠" },
+  { label: "Elections",     href: "/elections",     icon: "🗳️" },
+  { label: "Candidates",    href: "/candidates",    icon: "👥" },
+  { label: "Results",       href: "/results",       icon: "📊" },
+  { label: "Notifications", href: "/notifications", icon: "🔔" },
+  { label: "Complaints",    href: "/complaints",    icon: "💭" },
+  { label: "Profile",       href: "/profile",       icon: "👤" },
+];
+
+export const COMMISSION_NAV: NavItem[] = [
+  { label: "Dashboard",   href: "/commission/dashboard",   icon: "🏠" },
+  { label: "Elections",   href: "/commission/elections",   icon: "🗳️" },
+  { label: "Nominations", href: "/commission/nominations", icon: "📝" },
+  { label: "Voters",      href: "/commission/voters",      icon: "👥" },
+  { label: "Stations",    href: "/commission/stations",    icon: "🖥️" },
+  { label: "Results",     href: "/commission/results",     icon: "📊" },
+  { label: "Complaints",  href: "/commission/complaints",  icon: "💭" },
+  { label: "Imports",     href: "/commission/imports",     icon: "📤" },
+  { label: "Audit",       href: "/commission/audit",       icon: "📜" },
+];
+
+interface SidebarProps {
+  items: NavItem[];
+  subtitle?: string;
+  roleLabel?: string;
+}
+
+export function Sidebar({ items, subtitle = "Student Portal", roleLabel = "STUDENT" }: SidebarProps) {
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const displayName = user?.fullName ?? "Guest";
+  const initials = displayName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+
+  return (
+    <aside className="hidden lg:flex lg:flex-col lg:w-[270px] lg:fixed lg:inset-y-0 bg-navy">
+      {/* Brand */}
+      <div className="flex items-center gap-3.5 border-b border-white/10 px-4 py-6">
+        <div className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-orange text-white text-lg font-extrabold shrink-0">
+          ATC
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[16px] font-bold text-white">ATC Voting</p>
+          <p className="truncate text-[13px] text-slate-400">{subtitle}</p>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto p-3">
+        <ul className="space-y-1">
+          {items.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3.5 rounded-lg px-4 py-3 text-[15px] font-medium transition-colors",
+                    active
+                      ? "bg-orange text-white font-bold"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  <span className="text-lg leading-none shrink-0" aria-hidden>{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* User footer */}
+      <div className="border-t border-white/10 p-3">
+        <div className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-orange to-teal text-white text-xs font-extrabold">
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[14px] font-semibold text-white">{displayName}</p>
+            <p className="truncate text-[12px] text-slate-400">{roleLabel}</p>
+          </div>
+          <span className="text-slate-400" aria-hidden>⚙</span>
+        </div>
+      </div>
+    </aside>
+  );
+}

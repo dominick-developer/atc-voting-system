@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+:root {
+  --blue: #1e40af;
+  --orange: #F47721;
+  --green: #16A36A;
+  --yellow: #F2C94C;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: #1e40af;
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+  font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+
+/* ─── Typewriter cursor ─── */
+@keyframes blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  display: inline-block;
+  width: 4px;
+  height: 0.9em;
+  margin-left: 4px;
+  background: #F47721;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .cursor-blink { display: none; }
+}

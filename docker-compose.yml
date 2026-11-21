@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  postgres-api:
+    image: postgres:16-alpine
+    container_name: atc-postgres-api
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: atc_api
+      POSTGRES_PASSWORD: change_me_api
+      POSTGRES_DB: atc_api
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_api_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atc_api"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-voting:
+    image: postgres:16-alpine
+    container_name: atc-postgres-voting
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: atc_voting
+      POSTGRES_PASSWORD: change_me_voting
+      POSTGRES_DB: atc_voting
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_voting_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atc_voting"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: atc-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: atc-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  pg_api_data:
+  pg_voting_data:
+  redis_data:
+  minio_data:

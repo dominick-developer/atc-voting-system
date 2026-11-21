@@ -1,0 +1,36 @@
+{
+    "name":  "atc-voting-system",
+    "version":  "0.1.0",
+    "private":  true,
+    "description":  "ATC Online Voting System - SOATECO \u0026 Class Elections",
+    "workspaces":  [
+                       "apps/*",
+                       "packages/*"
+                   ],
+    "scripts":  {
+                    "dev:web":  "pnpm --filter @atc/web dev",
+                    "dev:api":  "pnpm --filter @atc/api start:dev",
+                    "dev:voting":  "pnpm --filter @atc/voting-service start:dev",
+                    "dev":  "concurrently -n web,api,voting -c blue,green,magenta \"pnpm dev:web\" \"pnpm dev:api\" \"pnpm dev:voting\"",
+                    "build":  "pnpm -r build",
+                    "db:api:generate":  "pnpm --filter @atc/api prisma:generate",
+                    "db:api:migrate":  "pnpm --filter @atc/api prisma:migrate",
+                    "db:voting:generate":  "pnpm --filter @atc/voting-service prisma:generate",
+                    "db:voting:migrate":  "pnpm --filter @atc/voting-service prisma:migrate"
+                },
+    "devDependencies":  {
+                            "concurrently":  "^9.1.0",
+                            "typescript":  "^5.6.3"
+                        },
+    "engines":  {
+                    "node":  "\u003e=20.0.0"
+                },
+    "pnpm":  {
+                 "onlyBuiltDependencies":  [
+                                               "bcrypt",
+                                               "prisma",
+                                               "@prisma/client",
+                                               "@prisma/engines"
+                                           ]
+             }
+}

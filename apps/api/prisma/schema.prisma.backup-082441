@@ -1,0 +1,461 @@
+// ─────────────────────────────────────────────────────────────
+// ATC ONLINE VOTING SYSTEM - CORE APPLICATION DB SCHEMA
+// Domains: identity, student, election, audit
+// NOTE: ballots/credentials/tally live in the ISOLATED voting DB.
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL_API")
+  directUrl = env("DIRECT_URL")
+}
+// ═════════════════════════════════════════════════════════════
+// IDENTITY DOMAIN
+// ═════════════════════════════════════════════════════════════
+
+enum RoleName {
+  SYSTEM_ADMIN
+  ELECTORAL_COMMISSION
+  ELECTION_OFFICER
+  RESULTS_OFFICER
+  OBSERVER
+  CANDIDATE
+  STUDENT
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  phoneNumber  String?
+  passwordHash String?
+  fullName     String
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roles        UserRole[]
+  auditLogs    AuditLog[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  name        RoleName   @unique
+  description String?
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  description String?
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ═════════════════════════════════════════════════════════════
+// STUDENT DOMAIN
+// ═════════════════════════════════════════════════════════════
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  SUSPENDED
+}
+
+enum DataSourceType {
+  API
+  FILE_IMPORT
+}
+
+model AcademicProgramme {
+  id        String  @id @default(uuid())
+  code      String  @unique
+  name      String
+  department String?
+  classes   AcademicClass[]
+  students  Student[]
+
+  @@map("academic_programmes")
+}
+
+model AcademicClass {
+  id          String @id @default(uuid())
+  name        String
+  ntaLevel    Int
+  programmeId String
+  academicYearId String
+  programme   AcademicProgramme @relation(fields: [programmeId], references: [id])
+  academicYear AcademicYear     @relation(fields: [academicYearId], references: [id])
+  students    Student[]
+
+  @@unique([programmeId, academicYearId, ntaLevel, name])
+  @@map("academic_classes")
+}
+
+model AcademicYear {
+  id        String  @id @default(uuid())
+  name      String  @unique // e.g. "2025/2026"
+  startsAt  DateTime
+  endsAt    DateTime
+  isActive  Boolean @default(false)
+  classes   AcademicClass[]
+
+  @@map("academic_years")
+}
+
+model Student {
+  id              String        @id @default(uuid())
+  admissionNumber String        @unique
+  firstName       String
+  middleName      String?
+  lastName        String
+  dateOfBirth     DateTime?
+  gender          String?
+  programmeId     String?
+  classId         String?
+  ntaLevel        Int?
+  academicYearId  String?
+  phoneNumber     String?
+  email           String?
+  secondarySchool String?
+  status          StudentStatus @default(ACTIVE)
+  sourceType      DataSourceType
+  lastSyncedAt    DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  programme AcademicProgramme? @relation(fields: [programmeId], references: [id])
+  class     AcademicClass?     @relation(fields: [classId], references: [id])
+
+  // Verification data (for identity challenge)
+  verificationAnswers VerificationAnswer[]
+
+  @@index([admissionNumber])
+  @@index([programmeId, classId])
+  @@map("students")
+}
+
+model VerificationAnswer {
+  id        String  @id @default(uuid())
+  studentId String
+  question  String
+  answerHash String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("verification_answers")
+}
+
+model DataSource {
+  id        String          @id @default(uuid())
+  name      String
+  type      DataSourceType
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  imports   DataImportJob[]
+
+  @@map("data_sources")
+}
+
+enum ImportStatus {
+  PENDING
+  VALIDATING
+  READY
+  IMPORTING
+  COMPLETED
+  FAILED
+}
+
+model DataImportJob {
+  id           String       @id @default(uuid())
+  sourceId     String?
+  fileName     String
+  totalRows    Int          @default(0)
+  validRows    Int          @default(0)
+  errorRows    Int          @default(0)
+  status       ImportStatus @default(PENDING)
+  report       Json?
+  createdById  String?
+  createdAt    DateTime     @default(now())
+  completedAt  DateTime?
+  source       DataSource?  @relation(fields: [sourceId], references: [id])
+
+  @@map("data_import_jobs")
+}
+
+model DataSyncLog {
+  id        String   @id @default(uuid())
+  sourceId  String?
+  status    String
+  message   String?
+  records   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("data_sync_logs")
+}
+
+// ═════════════════════════════════════════════════════════════
+// ELECTION DOMAIN
+// ═════════════════════════════════════════════════════════════
+
+enum ElectionCategory {
+  GENERAL  // SOATECO
+  CLASS
+}
+
+enum ElectionStatus {
+  DRAFT
+  NOMINATION_OPEN
+  NOMINATION_CLOSED
+  CAMPAIGN
+  READY
+  VOTING_OPEN
+  VOTING_CLOSED
+  TALLYING
+  VERIFIED
+  DECLARED
+  CANCELLED
+}
+
+model Election {
+  id                String           @id @default(uuid())
+  title             String
+  category          ElectionCategory
+  academicYearId    String?
+  description       String?
+  nominationOpensAt DateTime?
+  nominationClosesAt DateTime?
+  campaignStartsAt  DateTime?
+  campaignEndsAt    DateTime?
+  votingStartsAt    DateTime?
+  votingEndsAt      DateTime?
+  status            ElectionStatus   @default(DRAFT)
+  classId           String?          // populated for CLASS elections
+  createdById       String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  positions   ElectionPosition[]
+  register    VoterRegisterEntry[]
+  stations    PollingStation[]
+  candidates  Candidate[]
+  nominations Nomination[]
+  auditLogs   AuditLog[]
+
+  @@index([category, status])
+  @@map("elections")
+}
+
+model ElectionPosition {
+  id            String   @id @default(uuid())
+  electionId    String
+  title         String
+  description   String?
+  numberOfWinners Int    @default(1)
+  maxSelections Int      @default(1)
+  order         Int      @default(0)
+  election      Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  candidates    Candidate[]
+  nominations   Nomination[]
+
+  @@map("election_positions")
+}
+
+enum NominationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+  DISQUALIFIED
+}
+
+model Nomination {
+  id              String           @id @default(uuid())
+  electionId      String
+  positionId      String
+  studentId       String
+  manifesto       String?
+  photoUrl        String?
+  documents       Json?
+  status          NominationStatus @default(DRAFT)
+  rejectionReason String?
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  createdAt       DateTime         @default(now())
+
+  election Election         @relation(fields: [electionId], references: [id])
+  position ElectionPosition @relation(fields: [positionId], references: [id])
+
+  @@unique([electionId, positionId, studentId])
+  @@map("nominations")
+}
+
+model Candidate {
+  id            String   @id @default(uuid())
+  electionId    String
+  positionId    String
+  studentId     String
+  displayName   String
+  manifesto     String?
+  photoUrl      String?
+  ballotOrder   Int      @default(0)
+  isApproved    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  election      Election         @relation(fields: [electionId], references: [id])
+  position      ElectionPosition @relation(fields: [positionId], references: [id])
+  campaignItems CampaignMaterial[]
+
+  @@unique([electionId, positionId, studentId])
+  @@map("candidates")
+}
+
+model CampaignMaterial {
+  id          String   @id @default(uuid())
+  candidateId String
+  type        String   // TEXT, IMAGE, VIDEO, LINK
+  content     String
+  isApproved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("campaign_materials")
+}
+
+model VoterRegisterEntry {
+  id         String   @id @default(uuid())
+  electionId String
+  studentId  String
+  isEligible Boolean  @default(true)
+  frozenAt   DateTime?
+  election   Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, studentId])
+  @@map("voter_register")
+}
+
+model PollingStation {
+  id         String   @id @default(uuid())
+  electionId String
+  name       String
+  location   String?
+  isActive   Boolean  @default(true)
+  election   Election @relation(fields: [electionId], references: [id])
+  terminals  VotingTerminal[]
+
+  @@map("polling_stations")
+}
+
+model VotingTerminal {
+  id          String   @id @default(uuid())
+  stationId   String
+  terminalKey String   @unique
+  isActive    Boolean  @default(true)
+  lastSeenAt  DateTime?
+  station     PollingStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@map("voting_terminals")
+}
+
+// ═════════════════════════════════════════════════════════════
+// AUDIT DOMAIN
+// ═════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  eventType   String
+  actorId     String?
+  electionId  String?
+  actor       User?    @relation(fields: [actorId], references: [id])
+  election    Election? @relation(fields: [electionId], references: [id])
+  payload     Json?    // NEVER contains candidate selections
+  previousHash String?
+  entryHash   String
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([electionId])
+  @@map("audit_logs")
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+  APPEALED
+  CLOSED
+}
+
+model Complaint {
+  id          String          @id @default(uuid())
+  reference   String          @unique
+  electionId  String?
+  submittedBy String
+  category    String
+  subject     String
+  description String
+  status      ComplaintStatus @default(SUBMITTED)
+  resolution  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("complaints")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  title      String
+  body       String
+  channel    String   @default("IN_SYSTEM")
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model SystemSetting {
+  key   String @id
+  value Json
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}

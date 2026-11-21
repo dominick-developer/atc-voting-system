@@ -1,0 +1,110 @@
+﻿import Image from "next/image";
+const FLAG = {
+  green:  "#1EB53A",
+  yellow: "#FCD116",
+  black:  "#000000",
+  blue:   "#00A3DD",
+};
+
+function FlagStripe() {
+  return (
+    <div className="flex h-1 w-full">
+      <div className="flex-[4] bg-[#1EB53A]" />
+      <div className="flex-[1] bg-[#FCD116]" />
+      <div className="flex-[4] bg-black" />
+      <div className="flex-[1] bg-[#FCD116]" />
+      <div className="flex-[4] bg-[#00A3DD]" />
+    </div>
+  );
+}
+
+export function GovBanner() {
+  return (
+    <div className="relative z-50 bg-white">
+      {/* Top flag stripe */}
+      <FlagStripe />
+
+      {/* Main banner */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-white via-white to-slate-50">
+        {/* Subtle diagonal flag pattern background */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${FLAG.green} 0%, ${FLAG.green} 30%, ${FLAG.yellow} 30%, ${FLAG.yellow} 35%, ${FLAG.black} 35%, ${FLAG.black} 65%, ${FLAG.yellow} 65%, ${FLAG.yellow} 70%, ${FLAG.blue} 70%, ${FLAG.blue} 100%)`,
+          }}
+        />
+
+        <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:py-4">
+
+          {/* â”€â”€â”€ LEFT: ATC Voting System Logo â”€â”€â”€ */}
+          <div className="flex shrink-0 items-center gap-3">
+            <Image
+              src="/images/voting-logo.png"
+              alt="ATC Voting System"
+              width={56}
+              height={56}
+              className="rounded-full shadow-md ring-2 ring-[#FCD116]"
+            />
+            <div className="hidden md:block">
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                Digital Democracy
+              </p>
+              <p className="text-sm font-black leading-tight text-[#10243A]">
+                ATC Voting System
+              </p>
+            </div>
+          </div>
+
+          {/* â”€â”€â”€ CENTER: Government Heading â”€â”€â”€ */}
+          <div className="flex min-w-0 flex-1 flex-col items-center text-center">
+            {/* Tanzania motto line */}
+            <div className="flex items-center gap-2">
+              <span className="hidden h-px w-6 bg-[#FCD116] sm:block" />
+              <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-[#1EB53A] sm:text-[10px]">
+                The United Republic of Tanzania
+              </p>
+              <span className="hidden h-px w-6 bg-[#FCD116] sm:block" />
+            </div>
+
+            {/* College name */}
+            <p className="mt-1 text-base font-black uppercase leading-none tracking-tight text-[#10243A] sm:text-xl">
+              Arusha Technical College
+            </p>
+
+            {/* System name with flag underline */}
+            <div className="mt-1.5 flex items-center gap-2">
+              <span className="h-[3px] w-6 rounded-full bg-[#1EB53A]" />
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#F47721] sm:text-xs">
+                ATC Voting System
+              </p>
+              <span className="h-[3px] w-6 rounded-full bg-[#00A3DD]" />
+            </div>
+          </div>
+
+          {/* â”€â”€â”€ RIGHT: ATC College Logo â”€â”€â”€ */}
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="hidden text-right md:block">
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                Established
+              </p>
+              <p className="text-sm font-black leading-tight text-[#10243A]">
+                Est. 1978
+              </p>
+            </div>
+            <Image
+              src="/images/atc-logo.png"
+              alt="Arusha Technical College"
+              width={56}
+              height={56}
+              className="rounded-full shadow-md ring-2 ring-[#FCD116]"
+            />
+          </div>
+
+        </div>
+      </div>
+
+      {/* Bottom flag stripe */}
+      <FlagStripe />
+    </div>
+  );
+}
