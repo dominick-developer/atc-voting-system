@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import {
-  ShieldCheck, Vote, BarChart3, Users, CheckCircle2, ArrowRight,
+  ShieldCheck, Vote, BarChart3, Users, CheckCircle2, ArrowRight, Share2,
   Fingerprint, EyeOff, ShieldAlert, Building2, ScrollText,
   LockKeyhole, GraduationCap, Globe2, Award, FileCheck,
   Sparkles, Zap
@@ -90,6 +90,14 @@ function Nav() {
               SW
             </button>
           </div>
+
+          <Link
+            href="/share/soateco-2026"
+            target="_blank"
+            className="hidden items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-blue-100 backdrop-blur-sm transition hover:bg-white/10 hover:text-white sm:flex"
+          >
+            <Share2 className="h-3.5 w-3.5" /> Share
+          </Link>
 
           <Button
             asChild
@@ -532,5 +540,6 @@ function Footer() {
     </footer>
   );
 }
+
 
 

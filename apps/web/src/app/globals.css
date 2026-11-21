@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..900&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -35,7 +35,7 @@ body {
 ::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
 
-/* ─── Typewriter cursor ─── */
+/* â”€â”€â”€ Typewriter cursor â”€â”€â”€ */
 @keyframes blink {
   0%, 49%   { opacity: 1; }
   50%, 100% { opacity: 0; }
@@ -55,10 +55,10 @@ body {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .cursor-blink { display: none; }
 }
-/* ═══════════════════════════════════════════
-   MODERN FONT — Inter
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MODERN FONT â€” Inter
    (modern, geometric, inafanana na Linear/Vercel)
-═══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 html, body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   font-feature-settings: 'cv11', 'ss01';
@@ -77,4 +77,48 @@ h1, h2, h3, h4 {
 h5, h6, strong {
   letter-spacing: -0.015em;
   font-weight: 700;
+}
+/* ═══════════════════════════════════════════
+   A4 POSTER — Print & Screen styles
+   Used by /share/[electionId]
+═══════════════════════════════════════════ */
+
+.a4-page {
+  width: 210mm;
+  height: 297mm;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .a4-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+    overflow: hidden !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

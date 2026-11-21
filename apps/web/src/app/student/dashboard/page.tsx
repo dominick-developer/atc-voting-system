@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { Vote, BarChart3, User, Bell, MessageSquare, FileText, GraduationCap } from "lucide-react";
+import { Vote, BarChart3, User, Bell, MessageSquare, FileText, GraduationCap, Share2 } from "lucide-react";
 import { CardDashboardShell } from "@/components/layout/card-dashboard-shell";
 import { DashboardCard } from "@/components/layout/dashboard-card";
 
@@ -20,6 +20,8 @@ export default function StudentDashboardPage() {
         description="Tazama arifa na taarifa muhimu." tone="amber" />
       <DashboardCard href="/complaints" icon={MessageSquare} title="Malalamiko"
         description="Wasilisha au fuatilia malalamiko yako." tone="teal" />
+            <DashboardCard href="/share/soateco-2026" icon={Share2} title="Share This Election"
+        description="Download the A4 flyer or share the voting link with your friends." tone="teal" />
       <DashboardCard href="/vote/wizard?electionId=soateco-2026" icon={FileText} title="Risiti Yangu"
         description="Tazama risiti ya kura yako (baada ya kupiga)." tone="slate" />
     </CardDashboardShell>
