@@ -1,3 +1,4 @@
-{
-    "installCommand": "cd ../.. && pnpm install"
+﻿{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd ../.. && pnpm install"
 }
