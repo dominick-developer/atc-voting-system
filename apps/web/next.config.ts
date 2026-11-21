@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+﻿import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   outputFileTracingRoot: path.join(__dirname, "../../"),
   transpilePackages: ["@atc/shared"],
-  outputFileTracingRoot: path.join(__dirname, "../../"),
   async rewrites() {
     return [
       {
