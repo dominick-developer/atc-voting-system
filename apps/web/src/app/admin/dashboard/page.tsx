@@ -19,6 +19,13 @@ export default function AdminDashboardPage() {
         description="Public election results and tallies." tone="orange" />
       <DashboardCard href="/commission/dashboard" icon={Vote} title="Commission Tools"
         description="Cross-role access to electoral commission tools." tone="amber" />
+      {
+        title: "School Integration",
+      description: "Configure ATC API keys for automatic student data sync.",
+      href: "/admin/settings/school-integration",
+      icon: Building2, // import from lucide-react
+      color: "amber",  // au muundo unaotumia
+},
     </CardDashboardShell>
   );
 }
