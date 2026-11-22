@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/api/query-provider";
 import { AuthProvider } from "@/lib/auth";
+import { ToastProvider } from "@/components/shared/toast";
 
 export const metadata: Metadata = {
   title: "ATC Online Voting System",
@@ -17,7 +18,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
 };
-
+// ... ndani ya RootLayout:
+return (
+  <html lang="en">
+    <body>
+      <ToastProvider>{children}</ToastProvider>
+    </body>
+  </html>
+);
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">

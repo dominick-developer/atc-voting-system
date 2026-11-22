@@ -19,13 +19,83 @@ export default function AdminDashboardPage() {
         description="Public election results and tallies." tone="orange" />
       <DashboardCard href="/commission/dashboard" icon={Vote} title="Commission Tools"
         description="Cross-role access to electoral commission tools." tone="amber" />
+      // Nje ya return, unda array:
+      const cards = [
+      {
+        title: "Assign Roles",
+      description: "...",
+      href: "/admin/roles",
+      icon: ShieldCheck,
+      tone: "blue",
+  },
+      {
+        title: "Manage Users",
+      description: "...",
+      href: "/admin/users",
+      icon: Users,
+      tone: "green",
+  },
+      {
+        title: "System Settings",
+      description: "...",
+      href: "/admin/settings",
+      icon: Settings,
+      tone: "purple",
+  },
+      {
+        title: "Audit Log",
+      description: "...",
+      href: "/admin/audit",
+      icon: ScrollText,
+      tone: "red",
+  },
+      {
+        title: "API Documentation",
+      description: "...",
+      href: "/api/docs",
+      icon: BookOpen,
+      tone: "slate",
+      external: true,
+  },
+      {
+        title: "View Results",
+      description: "...",
+      href: "/results",
+      icon: BarChart3,
+      tone: "teal",
+  },
+      {
+        title: "Commission Tools",
+      description: "...",
+      href: "/commission/dashboard",
+      icon: Vote,
+      tone: "amber",
+  },
       {
         title: "School Integration",
       description: "Configure ATC API keys for automatic student data sync.",
       href: "/admin/settings/school-integration",
-      icon: Building2, // import from lucide-react
-      color: "amber",  // au muundo unaotumia
-},
+      icon: Building2,
+      tone: "orange",
+  },
+      ];
+
+      // Ndani ya return, render kwa map:
+      return (
+      // ...
+      <div className="grid ...">
+        {cards.map((c) => (
+          <DashboardCard
+            key={c.title}
+            href={c.href}
+            icon={c.icon}
+            title={c.title}
+            description={c.description}
+            tone={c.tone}
+          />
+        ))}
+      </div>
+      );
     </CardDashboardShell>
   );
 }
