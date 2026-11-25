@@ -1,4 +1,4 @@
-﻿import { Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { HealthModule } from "./modules/health/health.module";
@@ -10,15 +10,7 @@ import { VotingModule } from "./voting/voting.module";
 import { PrismaModule } from "./common/prisma/prisma.module";
 import { IntegrationsModule } from "./modules/integrations/integrations.module";
 import { AdminModule } from "./modules/admin/admin.module";
-import { IntegrationsModule } from "./modules/integrations/integrations.module";
 
-@Module({
-  imports: [
-    // ... zilizopo
-    IntegrationsModule,
-  ],
-})
-export class AppModule { }
 @Module({
   imports: [
     PrismaModule,

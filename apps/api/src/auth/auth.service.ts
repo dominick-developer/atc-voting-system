@@ -1,4 +1,4 @@
-﻿import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { mockUsers, MockUser } from "../mock/users";
 import { PrismaService } from "../common/prisma/prisma.service";
@@ -145,4 +145,20 @@ export class AuthService {
 
 
   
+
+  async me(userId: string) {
+    const user: any = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: { include: { role: true } } },
+    });
+    if (!user) return null;
+    const userRoles = (user.roles ?? []).map((ur: any) => ur.role.name);
+    return {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: userRoles[0] ?? "STUDENT",
+      roles: userRoles,
+    };
+  }
 }

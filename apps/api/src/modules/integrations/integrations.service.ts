@@ -5,7 +5,7 @@ import {
     Logger,
 } from "@nestjs/common";
 import axios from "axios";
-import { PrismaService } from "@/prisma/prisma.service";
+import { PrismaService } from "@/common/prisma/prisma.service";
 import { CryptoService } from "@/common/crypto/crypto.service";
 
 const ATC_KEY = "integrations.atc";
@@ -163,14 +163,14 @@ export class IntegrationsService {
         });
     }
 
-    // ─── private helpers ────────────────────────────────────────────
+    // â”€â”€â”€ private helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private maskKey(cipher: string): string {
         try {
             const plain = this.crypto.decrypt(cipher);
-            if (plain.length <= 4) return "••••";
-            return `••••${plain.slice(-4)}`;
+            if (plain.length <= 4) return "â€¢â€¢â€¢â€¢";
+            return `â€¢â€¢â€¢â€¢${plain.slice(-4)}`;
         } catch {
-            return "••••";
+            return "â€¢â€¢â€¢â€¢";
         }
     }
 

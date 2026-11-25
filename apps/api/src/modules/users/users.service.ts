@@ -1,6 +1,6 @@
 // apps/api/src/modules/users/users.service.ts
 import { Injectable, NotFoundException, ConflictException } from "@nestjs/common";
-import { PrismaService } from "@/prisma/prisma.service";
+import { PrismaService } from "@/common/prisma/prisma.service";
 
 @Injectable()
 export class UsersService {
@@ -36,7 +36,7 @@ export class UsersService {
     ]);
 
     return {
-      data: data.map((u) => ({
+      data: data.map((u: any) => ({
         id: u.id,
         fullName: u.fullName,
         email: u.email,
