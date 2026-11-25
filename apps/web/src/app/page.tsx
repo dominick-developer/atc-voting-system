@@ -8,11 +8,10 @@ import {
   LockKeyhole, GraduationCap, Globe2, Award, FileCheck,
   Sparkles, Zap, Menu, X, ChevronDown, Mail, Phone, MapPin,
   Facebook, Instagram, Twitter, Youtube, Scale, Gavel, HelpCircle,
-  BookOpen,
+  BookOpen, Crown, Trophy, UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TypewriterHero } from "@/components/layout/typewriter-hero";
-import { QuickAccessHub } from "@/components/landing/quick-access-hub";
 import { LeadersPortfolio } from "@/components/landing/leaders-portfolio";
 
 export default function HomePage() {
@@ -21,11 +20,8 @@ export default function HomePage() {
       <Nav />
       <Hero />
       <TrustBar />
-      <QuickAccessHub />
       <Categories />
-      <div id="leaders">
-        <LeadersPortfolio />
-      </div>
+      <LeadersSection />
       <HowItWorks />
       <Security />
       <FAQ />
@@ -36,7 +32,7 @@ export default function HomePage() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   NAV — Desktop + Mobile drawer
+   NAV
 ═══════════════════════════════════════════════════════════ */
 function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -163,8 +159,8 @@ function Hero() {
         }}
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-1.5 text-xs font-medium text-blue-100 backdrop-blur-sm">
               <span className="relative flex h-1.5 w-1.5">
@@ -174,16 +170,16 @@ function Hero() {
               Voting is LIVE · SOATECO 2026
             </div>
 
-            <div className="mt-6 min-h-[200px] sm:min-h-[240px]">
+            <div className="mt-5 min-h-[180px] sm:min-h-[220px]">
               <TypewriterHero />
             </div>
 
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-blue-100">
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-blue-100 sm:text-lg">
               <span className="font-semibold text-white">Secure. Transparent. Accountable.</span>{" "}
-              Run student elections the modern way — verified voters, anonymous ballots, auditable results.
+              Run student elections the modern way.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button
                 asChild
                 variant="orange"
@@ -204,7 +200,7 @@ function Hero() {
               </Button>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-blue-200">
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-blue-200">
               {["Anonymous ballots", "Verified voters", "Auditable results"].map((t) => (
                 <span key={t} className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-[#16A36A]" /> {t}
@@ -218,7 +214,7 @@ function Hero() {
               <img
                 src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80"
                 alt="ATC students on campus"
-                className="h-[400px] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="h-[360px] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 loading="eager"
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#10243A]/40 via-transparent to-transparent" />
@@ -245,7 +241,7 @@ function Hero() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TRUST BAR
+   TRUST BAR — compact
 ═══════════════════════════════════════════════════════════ */
 function TrustBar() {
   const stats = [
@@ -256,11 +252,11 @@ function TrustBar() {
   ];
   return (
     <section className="border-y border-white/5 bg-white">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 md:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 py-8 sm:px-6 md:grid-cols-4 lg:px-8">
         {stats.map((s) => (
           <div key={s.l} className="text-center">
-            <p className="text-3xl font-black text-[#10243A] sm:text-4xl">{s.v}</p>
-            <p className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+            <p className="text-2xl font-black text-[#10243A] sm:text-3xl">{s.v}</p>
+            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
               {s.l}
             </p>
           </div>
@@ -271,7 +267,7 @@ function TrustBar() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CATEGORIES
+   CATEGORIES — compact
 ═══════════════════════════════════════════════════════════ */
 function Categories() {
   const items = [
@@ -296,7 +292,7 @@ function Categories() {
   ];
 
   return (
-    <section id="elections" className="relative bg-[#1e40af] py-20 overflow-hidden">
+    <section id="elections" className="relative bg-[#1e40af] py-16 overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
@@ -310,15 +306,15 @@ function Categories() {
           <p className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-blue-100">
             <Sparkles className="h-3 w-3 text-[#F47721]" /> Elections
           </p>
-          <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
             Two tracks. One platform.
           </h2>
-          <p className="mt-3 text-lg text-blue-100">
+          <p className="mt-2 text-base text-blue-100">
             Everyone stays in their lane. Every election is fully independent.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-7 lg:grid-cols-2">
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {items.map((c) => {
             const Icon = c.Icon;
             return (
@@ -326,7 +322,7 @@ function Categories() {
                 key={c.title}
                 className="group overflow-hidden rounded-3xl bg-white shadow-2xl ring-4 ring-[#F47721]/60 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-15px_rgba(244,119,33,0.5)] hover:ring-[#F47721]"
               >
-                <div className="relative h-56 overflow-hidden">
+                <div className="relative h-44 overflow-hidden">
                   <img
                     src={c.image}
                     alt={c.title}
@@ -334,19 +330,19 @@ function Categories() {
                     loading="lazy"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#10243A]/80 via-[#10243A]/30 to-transparent" />
-                  <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#10243A] shadow-lg ring-2 ring-[#F47721]/40">
+                  <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#10243A] shadow-lg ring-2 ring-[#F47721]/40">
                     <Icon className="h-3.5 w-3.5 text-[#F47721]" />
                     {c.tag}
                   </div>
                 </div>
-                <div className="p-7">
-                  <h3 className="text-2xl font-extrabold tracking-tight text-[#10243A]">
+                <div className="p-6">
+                  <h3 className="text-xl font-extrabold tracking-tight text-[#10243A]">
                     {c.title}
                   </h3>
-                  <p className="mt-2 text-[15px] leading-relaxed text-slate-600">{c.desc}</p>
-                  <ul className="mt-4 space-y-2">
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{c.desc}</p>
+                  <ul className="mt-4 space-y-1.5">
                     {c.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-slate-700">
+                      <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
                         <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#16A36A]/10">
                           <CheckCircle2 className="h-3.5 w-3.5 text-[#16A36A]" />
                         </span>
@@ -365,7 +361,90 @@ function Categories() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   HOW IT WORKS
+   LEADERS SECTION — with tab navigation
+   ⭐ This replaces QuickAccessHub + provides leader filtering nav
+═══════════════════════════════════════════════════════════ */
+function LeadersSection() {
+  const [activeTab, setActiveTab] = useState<string>("soateco");
+
+  const tabs = [
+    { id: "soateco", label: "SOATECO Leaders", Icon: Crown, desc: "Student government executives" },
+    { id: "class", label: "Class Leaders", Icon: GraduationCap, desc: "Class representatives" },
+    { id: "candidates", label: "Candidates 2026", Icon: Trophy, desc: "This year's contenders" },
+    { id: "past", label: "Past Leaders", Icon: UserCog, desc: "Previous leadership" },
+  ];
+
+  const activeInfo = tabs.find((t) => t.id === activeTab);
+
+  return (
+    <section id="leaders" className="relative bg-white py-16 overflow-hidden">
+      {/* Subtle dot pattern */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.5]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgb(226 232 240) 1px, transparent 0)",
+          backgroundSize: "26px 26px",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Section header */}
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#10243A]">
+            <Crown className="h-3 w-3 text-[#F47721]" /> Leadership
+          </p>
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-[#10243A] sm:text-4xl">
+            Meet your leaders.
+          </h2>
+          <p className="mt-2 text-base text-slate-600">
+            Elected representatives and candidates across SOATECO and classes.
+          </p>
+        </div>
+
+        {/* Tabs navigation */}
+        <div className="mt-8 flex justify-center">
+          <div className="inline-flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+            {tabs.map((t) => {
+              const Icon = t.Icon;
+              const isActive = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTab(t.id)}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${isActive
+                      ? "bg-[#F47721] text-white shadow-md"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-[#10243A]"
+                    }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.label}</span>
+                  <span className="sm:hidden">{t.label.split(" ")[0]}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Active tab description */}
+        {activeInfo && (
+          <p className="mt-4 text-center text-sm text-slate-500">
+            {activeInfo.desc}
+          </p>
+        )}
+
+        {/* Leaders content */}
+        <div className="mt-10">
+          <LeadersPortfolio activeTab={activeTab as any} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOW IT WORKS — compact
 ═══════════════════════════════════════════════════════════ */
 function HowItWorks() {
   const steps = [
@@ -376,41 +455,41 @@ function HowItWorks() {
   ];
 
   return (
-    <section id="how" className="bg-white py-20">
+    <section id="how" className="bg-white py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#10243A]">
             <Zap className="h-3 w-3 text-[#F47721]" /> How it works
           </p>
-          <h2 className="mt-4 text-4xl font-black tracking-tight text-[#10243A] sm:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-[#10243A] sm:text-4xl">
             First login → sealed ballot<br />in under two minutes.
           </h2>
-          <p className="mt-3 text-lg text-slate-600">
+          <p className="mt-2 text-base text-slate-600">
             Four simple steps. Zero shortcuts on security.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((s, i) => {
             const Icon = s.Icon;
             return (
               <div key={s.n} className="relative">
                 {i < steps.length - 1 && (
-                  <div className="absolute -right-3 top-[72px] hidden h-px w-6 bg-gradient-to-r from-slate-300 to-transparent lg:block" />
+                  <div className="absolute -right-3 top-[68px] hidden h-px w-6 bg-gradient-to-r from-slate-300 to-transparent lg:block" />
                 )}
-                <div className="group relative h-full rounded-3xl bg-white p-7 ring-2 ring-[#F47721]/20 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#F47721]/15 hover:ring-4 hover:ring-[#F47721]">
+                <div className="group relative h-full rounded-3xl bg-white p-6 ring-2 ring-[#F47721]/20 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#F47721]/15 hover:ring-4 hover:ring-[#F47721]">
                   <div className="flex items-start justify-between">
-                    <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F47721]/10 text-[#F47721] ring-2 ring-[#F47721]/20 transition group-hover:bg-[#F47721] group-hover:text-white group-hover:ring-[#F47721]/40">
-                      <Icon className="h-6 w-6 transition group-hover:scale-110" />
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#F47721]/10 text-[#F47721] ring-2 ring-[#F47721]/20 transition group-hover:bg-[#F47721] group-hover:text-white group-hover:ring-[#F47721]/40">
+                      <Icon className="h-5 w-5 transition group-hover:scale-110" />
                     </div>
-                    <span className="text-5xl font-black leading-none text-slate-100 transition-colors duration-500 group-hover:text-[#F47721]/30">
+                    <span className="text-4xl font-black leading-none text-slate-100 transition-colors duration-500 group-hover:text-[#F47721]/30">
                       {s.n}
                     </span>
                   </div>
-                  <h3 className="mt-5 text-lg font-bold tracking-tight text-[#10243A]">
+                  <h3 className="mt-4 text-base font-bold tracking-tight text-[#10243A]">
                     {s.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{s.desc}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{s.desc}</p>
                 </div>
               </div>
             );
@@ -435,7 +514,7 @@ function Security() {
   ];
 
   return (
-    <section id="security" className="relative bg-[#1e40af] py-20 overflow-hidden">
+    <section id="security" className="relative bg-[#1e40af] py-16 overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(244,119,33,0.15),transparent_55%)]" />
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.06]"
@@ -450,35 +529,35 @@ function Security() {
           <p className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-blue-100">
             <LockKeyhole className="h-3 w-3 text-[#16A36A]" /> Security
           </p>
-          <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
             Trust isn&apos;t promised.<br />It&apos;s engineered.
           </h2>
-          <p className="mt-3 text-lg text-blue-100">
+          <p className="mt-2 text-base text-blue-100">
             Six layers of protection. Zero shortcuts.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {pillars.map((p) => {
             const Icon = p.Icon;
             return (
               <div
                 key={p.title}
-                className="group rounded-3xl bg-white p-7 shadow-2xl ring-4 ring-[#F47721]/40 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-15px_rgba(244,119,33,0.5)] hover:ring-[#F47721]"
+                className="group rounded-3xl bg-white p-6 shadow-2xl ring-4 ring-[#F47721]/40 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-15px_rgba(244,119,33,0.5)] hover:ring-[#F47721]"
               >
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#F47721]/10 text-[#F47721] ring-2 ring-[#F47721]/20 transition group-hover:bg-[#F47721] group-hover:text-white group-hover:ring-[#F47721]/40">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#F47721]/10 text-[#F47721] ring-2 ring-[#F47721]/20 transition group-hover:bg-[#F47721] group-hover:text-white group-hover:ring-[#F47721]/40">
                   <Icon className="h-5 w-5 transition group-hover:scale-110" />
                 </div>
-                <h3 className="mt-4 text-lg font-bold tracking-tight text-[#10243A]">
+                <h3 className="mt-4 text-base font-bold tracking-tight text-[#10243A]">
                   {p.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{p.desc}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{p.desc}</p>
               </div>
             );
           })}
         </div>
 
-        <div className="mx-auto mt-8 max-w-2xl rounded-2xl bg-white p-5 text-center ring-4 ring-[#F2C94C]/60 transition hover:ring-[#F2C94C]">
+        <div className="mx-auto mt-8 max-w-2xl rounded-2xl bg-white p-4 text-center ring-4 ring-[#F2C94C]/60 transition hover:ring-[#F2C94C]">
           <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#10243A]">
             <LockKeyhole className="h-4 w-4 text-[#F47721]" />
             Independent verification is required before any real election
@@ -490,7 +569,7 @@ function Security() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FAQ — accordion (closed by default = saves visual length)
+   FAQ
 ═══════════════════════════════════════════════════════════ */
 function FAQ() {
   const faqs = [
@@ -505,7 +584,7 @@ function FAQ() {
   ];
 
   return (
-    <section id="faq" className="relative bg-white py-20 overflow-hidden">
+    <section id="faq" className="relative bg-white py-16 overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.5]"
         style={{
@@ -519,25 +598,25 @@ function FAQ() {
           <p className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#10243A]">
             <HelpCircle className="h-3 w-3 text-[#F47721]" /> Frequently Asked
           </p>
-          <h2 className="mt-4 text-4xl font-black tracking-tight text-[#10243A] sm:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-[#10243A] sm:text-4xl">
             Questions, answered.
           </h2>
-          <p className="mt-3 text-lg text-slate-600">
+          <p className="mt-2 text-base text-slate-600">
             Everything you need to know before casting your ballot.
           </p>
         </div>
 
-        <div className="mt-10 space-y-3">
+        <div className="mt-8 space-y-2.5">
           {faqs.map((f) => (
             <details
               key={f.q}
-              className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-[#F47721]/40 hover:shadow-md open:border-[#F47721]/60 open:shadow-md"
+              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-[#F47721]/40 hover:shadow-md open:border-[#F47721]/60 open:shadow-md"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                 <span className="text-[15px] font-semibold text-[#10243A]">{f.q}</span>
                 <ChevronDown className="h-5 w-5 shrink-0 text-[#F47721] transition-transform duration-300 group-open:rotate-180" />
               </summary>
-              <p className="mt-3 border-t border-slate-100 pt-3 text-sm leading-relaxed text-slate-600">
+              <p className="mt-2 border-t border-slate-100 pt-2.5 text-sm leading-relaxed text-slate-600">
                 {f.a}
               </p>
             </details>
@@ -560,7 +639,7 @@ function Regulations() {
   ];
 
   return (
-    <section id="regulations" className="relative bg-[#1e40af] py-20 overflow-hidden">
+    <section id="regulations" className="relative bg-[#1e40af] py-16 overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(244,119,33,0.15),transparent_55%)]" />
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.08]"
@@ -575,27 +654,27 @@ function Regulations() {
           <p className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-blue-100">
             <Scale className="h-3 w-3 text-[#F47721]" /> Regulations
           </p>
-          <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
             The rules of the game.
           </h2>
-          <p className="mt-3 text-lg text-blue-100">
+          <p className="mt-2 text-base text-blue-100">
             Clear rules. Fair play. Accountable outcomes.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {rules.map((r) => {
             const Icon = r.Icon;
             return (
               <div
                 key={r.title}
-                className="group rounded-2xl bg-white p-6 shadow-xl ring-2 ring-[#F47721]/20 transition-all duration-300 hover:-translate-y-1 hover:ring-[#F47721]"
+                className="group rounded-2xl bg-white p-5 shadow-xl ring-2 ring-[#F47721]/20 transition-all duration-300 hover:-translate-y-1 hover:ring-[#F47721]"
               >
                 <div className="grid h-11 w-11 place-items-center rounded-xl bg-[#F47721]/10 text-[#F47721] ring-2 ring-[#F47721]/20 transition group-hover:bg-[#F47721] group-hover:text-white">
                   <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="mt-4 text-base font-bold tracking-tight text-[#10243A]">{r.title}</h3>
-                <ul className="mt-3 space-y-2">
+                <h3 className="mt-3 text-base font-bold tracking-tight text-[#10243A]">{r.title}</h3>
+                <ul className="mt-2.5 space-y-1.5">
                   {r.items.map((item) => (
                     <li key={item} className="flex items-start gap-2 text-[13px] text-slate-600">
                       <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#16A36A]" />
@@ -608,7 +687,7 @@ function Regulations() {
           })}
         </div>
 
-        <div className="mt-10 text-center">
+        <div className="mt-8 text-center">
           <Button
             asChild
             variant="orange"
@@ -626,7 +705,7 @@ function Regulations() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FOOTER — categorized + professional
+   FOOTER
 ═══════════════════════════════════════════════════════════ */
 function Footer() {
   const cols = [
@@ -668,7 +747,6 @@ function Footer() {
 
   return (
     <footer className="relative bg-[#0f1f4a] text-blue-100 overflow-hidden">
-      {/* Grid pattern */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
@@ -677,12 +755,10 @@ function Footer() {
           backgroundSize: "48px 48px",
         }}
       />
-      {/* Orange accent line at top */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#F47721] to-transparent" />
 
-      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-12">
-          {/* Brand column */}
           <div className="lg:col-span-4">
             <div className="flex items-center gap-3">
               <div className="grid h-11 w-11 place-items-center rounded-xl bg-[#F47721] text-white text-sm font-black ring-2 ring-[#F47721]/40">
@@ -697,13 +773,12 @@ function Footer() {
                 </p>
               </div>
             </div>
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-blue-200">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-blue-200">
               A modern digital platform for secure, transparent and accountable
               student elections at Arusha Technical College.
             </p>
 
-            {/* Trust badges */}
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               {["Secure", "Anonymous", "Auditable"].map((b) => (
                 <span
                   key={b}
@@ -714,8 +789,7 @@ function Footer() {
               ))}
             </div>
 
-            {/* Socials */}
-            <div className="mt-6 flex items-center gap-2">
+            <div className="mt-5 flex items-center gap-2">
               {socials.map((s) => {
                 const Icon = s.Icon;
                 return (
@@ -732,7 +806,6 @@ function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
           {cols.map((col) => (
             <div key={col.h} className="lg:col-span-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-[#F47721]">
@@ -754,7 +827,6 @@ function Footer() {
             </div>
           ))}
 
-          {/* Contact column */}
           <div className="lg:col-span-2">
             <p className="text-[11px] font-bold uppercase tracking-wider text-[#F47721]">
               Contact
@@ -780,8 +852,7 @@ function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-blue-300 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-blue-300 sm:flex-row">
           <p>
             © {new Date().getFullYear()} ATC DIGITAL DEMOCRACY · Arusha Technical College
           </p>
